@@ -76,7 +76,7 @@ public class ConversorMonedas {
     }
 
     public static void main(String[] args) {
-        String apiKey = "9f8500d9a508af1185d3f31d";  // API
+        String apiKey = "_";  // API
         Scanner scanner = new Scanner(System.in);
 
         try {
