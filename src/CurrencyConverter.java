@@ -5,22 +5,29 @@ import java.net.http.HttpResponse;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class CurrencyConverter {
+
+    // Logger para manejar los logs
+    private static final Logger logger = Logger.getLogger(CurrencyConverter.class.getName());
 
     // Método para realizar la solicitud a la API y obtener la respuesta
     public static HttpResponse<String> getExchangeRates(String apiKey) throws Exception {
         String urlBase = "https://api.exchangerate-api.com/v4/latest/USD";
         String url = urlBase + "?apikey=" + apiKey;
 
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("Accept", "application/json")
-                .header("User-Agent", "CurrencyConverterApp/1.0")
-                .build();
+        // Usar try-with-resources para manejar automáticamente el HttpClient
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .header("Accept", "application/json")
+                    .header("User-Agent", "CurrencyConverterApp/1.0")
+                    .build();
 
-        return client.send(request, HttpResponse.BodyHandlers.ofString());
+            return client.send(request, HttpResponse.BodyHandlers.ofString());
+        }
     }
 
     // Método para convertir la cantidad usando las tasas de cambio
@@ -33,8 +40,8 @@ public class CurrencyConverter {
         if (rates.has(currencyCode)) {
             return rates.get(currencyCode).getAsDouble();
         } else {
-            System.out.println("Moneda no encontrada.");
-            return -1;  // En caso no se encuentre la moneda
+            logger.warning("Moneda no encontrada: " + currencyCode);
+            return -1;  // Retorna -1 si no se encuentra la moneda
         }
     }
 
@@ -69,11 +76,11 @@ public class CurrencyConverter {
     }
 
     public static void main(String[] args) {
-        String apiKey = "9f8500d9a508af1185d3f31d"; //KEY
+        String apiKey = "9f8500d9a508af1185d3f31d";  // API
         Scanner scanner = new Scanner(System.in);
 
         try {
-            // Solicitud a la API
+            // Realizar la solicitud a la API y obtener la respuesta
             HttpResponse<String> response = getExchangeRates(apiKey);
 
             if (response.statusCode() == 200) {
@@ -83,15 +90,14 @@ public class CurrencyConverter {
 
                 JsonObject rates = jsonResponse.getAsJsonObject("rates");
 
-                // Llamamos a la función para ver las tasas
+                // Mostrar tasas de cambio al inicio
                 showExchangeRates(rates);
 
-                // Menú usado repetivtivamente y sus casos
+                // Bucle para el menú
                 while (true) {
                     showMenu();
 
                     // Leer la opción seleccionada por el usuario
-                    System.out.println("Ingresa la opción: ");
                     int option = scanner.nextInt();
 
                     if (option == 7) {
@@ -105,8 +111,8 @@ public class CurrencyConverter {
 
                     double fromRate = 0;
                     double toRate = 0;
-                    String fromCurrency = "";
-                    String toCurrency = "";
+                    String fromCurrency = null;
+                    String toCurrency = null;
 
                     // Configurar la moneda de origen según la opción seleccionada
                     switch (option) {
@@ -139,13 +145,12 @@ public class CurrencyConverter {
                             continue;
                     }
 
-                    // La tasa debe ser válida
+                    // Asegurarse de que la tasa sea válida
                     if (fromRate != -1) {
                         // Preguntar a qué moneda convertir
                         System.out.println("\nSelecciona la moneda a la que deseas convertir:");
                         showMenu();
 
-                        System.out.println("Ingresa la opción: ");
                         int toOption = scanner.nextInt();
 
                         // Configurar la moneda de destino
@@ -179,27 +184,27 @@ public class CurrencyConverter {
                                 continue;
                         }
 
+                        // Asegurarse de que la tasa de destino sea válida
                         if (toRate != -1) {
-                            // Conversión
+                            // Realizar la conversión
                             double convertedAmount = convertCurrency(amount, fromRate, toRate);
                             System.out.printf("\n%.2f %s equivale a %.2f %s\n", amount, fromCurrency, convertedAmount, toCurrency);
                         }
                     }
 
-                    // UX/UI para que no se vea tan tosco el cambio
+                    // Preguntar si el usuario desea hacer otra conversión
                     if (!continueConversion(scanner)) {
                         System.out.println("\nGracias por usar el Conversor de Monedas. ¡Hasta luego!");
                         break;
                     }
+                    // Separación
+                    System.out.println("\n---------------------------------------------------");
                 }
             } else {
-                System.out.println("Error al obtener datos de la API. Código de estado: " + response.statusCode()); //En caso de excepción
+                logger.warning("Error al obtener las tasas de cambio. Código de estado: " + response.statusCode());
             }
-
         } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            scanner.close();
+            logger.log(Level.SEVERE, "Error al procesar la conversión de monedas.", e);
         }
     }
 }
