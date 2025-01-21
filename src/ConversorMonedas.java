@@ -8,10 +8,10 @@ import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class CurrencyConverter {
+public class ConversorMonedas {
 
     // Logger para manejar los logs
-    private static final Logger logger = Logger.getLogger(CurrencyConverter.class.getName());
+    private static final Logger logger = Logger.getLogger(ConversorMonedas.class.getName());
 
     // Método para realizar la solicitud a la API y obtener la respuesta
     public static HttpResponse<String> getExchangeRates(String apiKey) throws Exception {
@@ -23,7 +23,7 @@ public class CurrencyConverter {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .header("Accept", "application/json")
-                    .header("User-Agent", "CurrencyConverterApp/1.0")
+                    .header("User-Agent", "ConversorMonedasApp/1.0")
                     .build();
 
             return client.send(request, HttpResponse.BodyHandlers.ofString());
