@@ -28,13 +28,13 @@ public class CurrencyConverter {
         return (amount / fromRate) * toRate;
     }
 
-    // Método para filtrar y obtener la tasa de una moneda específica
+    // Método para obtener la tasa de una moneda específica
     public static double getRate(String currencyCode, JsonObject rates) {
         if (rates.has(currencyCode)) {
             return rates.get(currencyCode).getAsDouble();
         } else {
             System.out.println("Moneda no encontrada.");
-            return -1;  // Retorna -1 si no se encuentra la moneda
+            return -1;  // En caso no se encuentre la moneda
         }
     }
 
@@ -61,12 +61,19 @@ public class CurrencyConverter {
         System.out.println("7. Salir");
     }
 
+    // Método para preguntar si el usuario quiere continuar o salir
+    public static boolean continueConversion(Scanner scanner) {
+        System.out.print("\n¿Quieres realizar otra conversión? (S/N): ");
+        String response = scanner.next();
+        return response.equalsIgnoreCase("S");
+    }
+
     public static void main(String[] args) {
-        String apiKey = "9f8500d9a508af1185d3f31d";  // Reemplaza con tu clave API real
+        String apiKey = "9f8500d9a508af1185d3f31d"; //KEY
         Scanner scanner = new Scanner(System.in);
 
         try {
-            // Realizar la solicitud a la API y obtener la respuesta
+            // Solicitud a la API
             HttpResponse<String> response = getExchangeRates(apiKey);
 
             if (response.statusCode() == 200) {
@@ -76,97 +83,117 @@ public class CurrencyConverter {
 
                 JsonObject rates = jsonResponse.getAsJsonObject("rates");
 
-                // Mostrar tasas de cambio al inicio
+                // Llamamos a la función para ver las tasas
                 showExchangeRates(rates);
 
-                // Bucle para el menú
+                // Menú usado repetivtivamente y sus casos
                 while (true) {
                     showMenu();
 
                     // Leer la opción seleccionada por el usuario
+                    System.out.println("Ingresa la opción: ");
                     int option = scanner.nextInt();
 
                     if (option == 7) {
-                        System.out.println("Gracias por usar el Conversor de Monedas. ¡Hasta luego!");
+                        System.out.println("\nGracias por usar el Conversor de Monedas. ¡Hasta luego!");
                         break;
                     }
 
                     // Leer la cantidad a convertir
-                    System.out.print("Ingrese la cantidad que desea convertir: ");
+                    System.out.print("\nIngrese la cantidad que desea convertir: ");
                     double amount = scanner.nextDouble();
 
                     double fromRate = 0;
                     double toRate = 0;
+                    String fromCurrency = "";
+                    String toCurrency = "";
 
                     // Configurar la moneda de origen según la opción seleccionada
                     switch (option) {
                         case 1:
-                            fromRate = getRate("ARS", rates);
+                            fromCurrency = "ARS";
+                            fromRate = getRate(fromCurrency, rates);
                             break;
                         case 2:
-                            fromRate = getRate("BOB", rates);
+                            fromCurrency = "BOB";
+                            fromRate = getRate(fromCurrency, rates);
                             break;
                         case 3:
-                            fromRate = getRate("BRL", rates);
+                            fromCurrency = "BRL";
+                            fromRate = getRate(fromCurrency, rates);
                             break;
                         case 4:
-                            fromRate = getRate("CLP", rates);
+                            fromCurrency = "CLP";
+                            fromRate = getRate(fromCurrency, rates);
                             break;
                         case 5:
-                            fromRate = getRate("COP", rates);
+                            fromCurrency = "COP";
+                            fromRate = getRate(fromCurrency, rates);
                             break;
                         case 6:
-                            fromRate = getRate("USD", rates);
+                            fromCurrency = "USD";
+                            fromRate = getRate(fromCurrency, rates);
                             break;
                         default:
                             System.out.println("Opción inválida. Intenta nuevamente.");
                             continue;
                     }
 
-                    // Asegurarse de que la tasa sea válida
+                    // La tasa debe ser válida
                     if (fromRate != -1) {
                         // Preguntar a qué moneda convertir
                         System.out.println("\nSelecciona la moneda a la que deseas convertir:");
                         showMenu();
 
+                        System.out.println("Ingresa la opción: ");
                         int toOption = scanner.nextInt();
 
                         // Configurar la moneda de destino
                         switch (toOption) {
                             case 1:
-                                toRate = getRate("ARS", rates);
+                                toCurrency = "ARS";
+                                toRate = getRate(toCurrency, rates);
                                 break;
                             case 2:
-                                toRate = getRate("BOB", rates);
+                                toCurrency = "BOB";
+                                toRate = getRate(toCurrency, rates);
                                 break;
                             case 3:
-                                toRate = getRate("BRL", rates);
+                                toCurrency = "BRL";
+                                toRate = getRate(toCurrency, rates);
                                 break;
                             case 4:
-                                toRate = getRate("CLP", rates);
+                                toCurrency = "CLP";
+                                toRate = getRate(toCurrency, rates);
                                 break;
                             case 5:
-                                toRate = getRate("COP", rates);
+                                toCurrency = "COP";
+                                toRate = getRate(toCurrency, rates);
                                 break;
                             case 6:
-                                toRate = getRate("USD", rates);
+                                toCurrency = "USD";
+                                toRate = getRate(toCurrency, rates);
                                 break;
                             default:
                                 System.out.println("Opción inválida. Intenta nuevamente.");
                                 continue;
                         }
 
-                        // Asegurarse de que la tasa de destino sea válida
                         if (toRate != -1) {
-                            // Realizar la conversión
+                            // Conversión
                             double convertedAmount = convertCurrency(amount, fromRate, toRate);
-                            System.out.printf("\n%.2f %s equivale a %.2f %s\n", amount, getCurrencyCode(fromRate), convertedAmount, getCurrencyCode(toRate));
+                            System.out.printf("\n%.2f %s equivale a %.2f %s\n", amount, fromCurrency, convertedAmount, toCurrency);
                         }
                     }
 
+                    // UX/UI para que no se vea tan tosco el cambio
+                    if (!continueConversion(scanner)) {
+                        System.out.println("\nGracias por usar el Conversor de Monedas. ¡Hasta luego!");
+                        break;
+                    }
                 }
             } else {
-                System.out.println("Error al obtener datos de la API. Código de estado: " + response.statusCode());
+                System.out.println("Error al obtener datos de la API. Código de estado: " + response.statusCode()); //En caso de excepción
             }
 
         } catch (Exception e) {
@@ -174,16 +201,5 @@ public class CurrencyConverter {
         } finally {
             scanner.close();
         }
-    }
-
-    // Método para obtener el código de la moneda basado en la tasa
-    public static String getCurrencyCode(double rate) {
-        if (rate == 0.000009) return "ARS";
-        if (rate == 0.000145) return "BOB";
-        if (rate == 0.1922) return "BRL";
-        if (rate == 0.000746) return "CLP";
-        if (rate == 0.00026) return "COP";
-        if (rate == 1.0) return "USD";
-        return "Desconocido";
     }
 }
